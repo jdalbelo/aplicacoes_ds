@@ -42,7 +42,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     nome = gr.Textbox(label="Nome do paciente")
     with gr.Row():
         idade = gr.Number(label="Idade", precision=0)
-        sexo = gr.Dropdown(["M","F","N.I"],label="Sexo")
+        sexo = gr.Dropdown(["","M","F","N.I"],label="Sexo")
     cep = gr.Textbox(label="CEP",placeholder="00000-000",max_length=9)
     with gr.Row():
         endereco = gr.Textbox(label="Endereço")

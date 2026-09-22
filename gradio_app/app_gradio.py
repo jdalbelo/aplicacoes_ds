@@ -4,9 +4,12 @@ import os
 from datetime import datetime
 
 ARQUIVO_CSV = "pacientes.csv"
-COLUNAS = ["timestamp", "nome", "idade", "convenio", "prioridade", "motivo"]
+COLUNAS = ["timestamp", "nome", "idade", "sexo", "cep", "endereco", "complemento", "bairro", "cidade", "estado", "convenio", "prioridade", "motivo"]
+# Garante que o arquivo exista ao iniciar o app para o botão de download não falhar
+if not os.path.exists(ARQUIVO_CSV):
+    pd.DataFrame(columns=COLUNAS).to_csv(ARQUIVO_CSV, index=False)
 
-def cadastrar_paciente(nome, idade, convenio, prioridade, motivo):
+def cadastrar_paciente(nome, idade, sexo, cep, endereco, complemento, bairro, cidade, estado,convenio, prioridade, motivo):
     if not nome.strip():
         return "Erro: O nome do paciente é obrigatório.", pd.DataFrame()
         
@@ -14,6 +17,13 @@ def cadastrar_paciente(nome, idade, convenio, prioridade, motivo):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "nome": nome, 
         "idade": idade,
+        "sexo": sexo,
+        "cep": cep,
+        "endereco": endereco,
+        "complemento": complemento,
+        "bairro": bairro,
+        "cidade": cidade,
+        "estado": estado,
         "convenio": convenio, 
         "prioridade": prioridade,
         "motivo": motivo,
@@ -21,10 +31,8 @@ def cadastrar_paciente(nome, idade, convenio, prioridade, motivo):
     
     novo = pd.DataFrame([linha])
     
-    if os.path.exists(ARQUIVO_CSV):
-        novo.to_csv(ARQUIVO_CSV, mode="a", header=False, index=False)
-    else:
-        novo.to_csv(ARQUIVO_CSV, mode="w", header=True, index=False)
+    # Como garantimos a criação do arquivo no início, podemos apenas dar append
+    novo.to_csv(ARQUIVO_CSV, mode="a", header=False, index=False)
         
     return "Paciente cadastrado com sucesso!", pd.read_csv(ARQUIVO_CSV).tail(5)
 
@@ -32,10 +40,20 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("## 🏥 Cadastro de Pacientes (Recepção)")
     
     nome = gr.Textbox(label="Nome do paciente")
-    idade = gr.Number(label="Idade", precision=0)
+    with gr.Row():
+        idade = gr.Number(label="Idade", precision=0)
+        sexo = gr.Dropdown(["M","F","N.I"],label="Sexo")
+    cep = gr.Textbox(label="CEP",placeholder="00000-000",max_length=9)
+    with gr.Row():
+        endereco = gr.Textbox(label="Endereço")
+        complemento = gr.Textbox(label="Complemento")
+    with gr.Row():
+        bairro = gr.Textbox(label="Bairro")
+        cidade = gr.Textbox(label="Cidade")
+        estado = gr.Textbox(label="Estado")
     convenio = gr.Dropdown(
-        ["Particular", "Unimed", "Bradesco Saúde", "SulAmérica", "Outro"],
-        label="Convênio",
+        ["Particular", "Unimed", "Bradesco Saúde", "SulAmérica", "Porto Seguro", "Alice", "Omint", "Amil", "Outro"],
+        label="Convênio"
     )
     prioridade = gr.Slider(1, 5, step=1, label="Prioridade do atendimento (5 = Urgente)")
     motivo = gr.Textbox(label="Motivo da consulta / observações", lines=3)
@@ -44,9 +62,12 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     saida_msg = gr.Textbox(label="Status", interactive=False)
     tabela = gr.Dataframe(label="Últimos pacientes cadastrados")
     
+    # Adicionando o botão de download na interface apontando para o arquivo CSV
+    botao_download = gr.DownloadButton("Baixar Planilha de Pacientes (CSV)", value=ARQUIVO_CSV)
+    
     botao.click(
         cadastrar_paciente,
-        inputs=[nome, idade, convenio, prioridade, motivo],
+        inputs=[nome, idade, sexo, cep, endereco, complemento, bairro, cidade, estado, convenio, prioridade, motivo],
         outputs=[saida_msg, tabela],
     )
 

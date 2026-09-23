@@ -54,43 +54,23 @@ st.set_page_config(
 
 # INICIALIZAÇÃO DO ARQUIVO
 def inicializar_arquivo():
-    # Cria o arquivo CSV caso ele ainda não exista.
     if not os.path.exists(ARQUIVO_CSV):
-        pd.DataFrame(
-            columns=COLUNAS
-        ).to_csv(
-            ARQUIVO_CSV,
-            index=False,
-            encoding="utf-8-sig"
+        pd.DataFrame(columns=COLUNAS).to_csv(
+            ARQUIVO_CSV, index=False, encoding="utf-8-sig"
         )
 
 # LEITURA DOS DADOS
 def carregar_pacientes():
-    # Carrega os pacientes armazenados no CSV.
     if not os.path.exists(ARQUIVO_CSV):
         return pd.DataFrame(columns=COLUNAS)
     try:
-        df = pd.read_csv(
-            ARQUIVO_CSV,
-            encoding="utf-8-sig"
-        )
+        df = pd.read_csv(ARQUIVO_CSV, encoding="utf-8-sig")
         return df
     except Exception:
         return pd.DataFrame(columns=COLUNAS)
 
 # NORMALIZAÇÃO DOS DADOS
-def normalizar_dados(
-    nome,
-    cep,
-    endereco,
-    numero,
-    complemento,
-    bairro,
-    cidade,
-    estado,
-    motivo
-):
-    # Padroniza os campos de texto antes de salvar.
+def normalizar_dados(nome, cep, endereco, numero, complemento, bairro, cidade, estado, motivo):
     nome = nome.strip().title()
     cep = cep.strip().replace("-", "")
 
@@ -105,54 +85,25 @@ def normalizar_dados(
     estado = estado.strip().upper()
     motivo = motivo.strip()
 
-    return (
-        nome,
-        cep,
-        endereco,
-        numero,
-        complemento,
-        bairro,
-        cidade,
-        estado,
-        motivo
-    )
+    return (nome, cep, endereco, numero, complemento, bairro, cidade, estado, motivo)
 
 # VALIDAÇÃO
-def validar_paciente(
-    nome,
-    idade,
-    sexo,
-    cep,
-    endereco,
-    numero,
-    bairro,
-    cidade,
-    estado,
-    convenio,
-    prioridade
-):
-    # Valida os campos obrigatórios do cadastro. Retorna: True -> dados válidos - False -> dados inválidos
-
+def validar_paciente(nome, idade, sexo, cep, endereco, numero, bairro, cidade, estado, convenio, prioridade):
     if not nome or not nome.strip():
         st.error("Digite o nome do paciente.")
         return False
-
     if len(nome.strip()) < 3:
         st.error("O nome deve possuir pelo menos 3 caracteres.")
         return False
-
     if idade is None:
         st.error("Digite a idade do paciente.")
         return False
-
     if idade < 0 or idade > 120:
         st.error("Digite uma idade entre 0 e 120 anos.")
         return False
-
     if not sexo:
         st.error("Selecione o sexo do paciente.")
         return False
-
     if not cep or not cep.strip():
         st.error("Digite o CEP.")
         return False
@@ -165,27 +116,21 @@ def validar_paciente(
     if not endereco or not endereco.strip():
         st.error("Digite o endereço.")
         return False
-
     if not numero or not numero.strip():
         st.error("Digite o número do endereço.")
         return False
-
     if not bairro or not bairro.strip():
         st.error("Digite o bairro.")
         return False
-
     if not cidade or not cidade.strip():
         st.error("Digite a cidade.")
         return False
-
     if not estado:
         st.error("Selecione o estado.")
         return False
-
     if not convenio:
         st.error("Selecione o convênio.")
         return False
-
     if prioridade is None or prioridade < 1 or prioridade > 5:
         st.error("Selecione uma prioridade entre 1 e 5.")
         return False
@@ -194,19 +139,21 @@ def validar_paciente(
 
 # SALVAR PACIENTE
 def salvar_dados_paciente(linha):
-    # Adiciona um novo paciente ao arquivo CSV.
     novo = pd.DataFrame([linha], columns=COLUNAS)
-    novo.to_csv(
-        ARQUIVO_CSV,
-        mode="a",
-        header=False,
-        index=False,
-        encoding="utf-8-sig"
-    )
+    novo.to_csv(ARQUIVO_CSV, mode="a", header=False, index=False, encoding="utf-8-sig")
+
+# EXCLUIR PACIENTE (NOVA FUNÇÃO)
+def excluir_paciente(timestamp):
+    df = carregar_pacientes()
+    if not df.empty:
+        # Mantém apenas os registros cujo timestamp seja diferente do escolhido para exclusão
+        df_filtrado = df[df["timestamp"] != timestamp]
+        df_filtrado.to_csv(ARQUIVO_CSV, index=False, encoding="utf-8-sig")
+        return True
+    return False
 
 # CONSULTAR ÚLTIMOS PACIENTES
 def buscar_ultimos_pacientes():
-    # Retorna os últimos 5 pacientes cadastrados.
     df = carregar_pacientes()
     if df.empty:
         return pd.DataFrame(columns=COLUNAS)
@@ -214,56 +161,21 @@ def buscar_ultimos_pacientes():
 
 # LIMPAR FORMULÁRIO
 def limpar_formulario():
-    campos = [
-        "nome",
-        "idade",
-        "sexo",
-        "cep",
-        "endereco",
-        "numero",
-        "complemento",
-        "bairro",
-        "cidade",
-        "estado",
-        "convenio",
-        "prioridade",
-        "motivo"
-    ]
+    campos = ["nome", "idade", "sexo", "cep", "endereco", "numero", "complemento", "bairro", "cidade", "estado", "convenio", "prioridade", "motivo"]
     for campo in campos:
         if campo in st.session_state:
             del st.session_state[campo]
 
 # CADASTRAR PACIENTE
-def cadastrar_paciente(
-    nome,
-    idade,
-    sexo,
-    cep,
-    endereco,
-    numero,
-    complemento,
-    bairro,
-    cidade,
-    estado,
-    convenio,
-    prioridade,
-    motivo
-):
-    # Validação
-    valido = validar_paciente(
-        nome, idade, sexo, cep, endereco, numero, bairro, cidade, estado, convenio, prioridade
-    )
+def cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo):
+    valido = validar_paciente(nome, idade, sexo, cep, endereco, numero, bairro, cidade, estado, convenio, prioridade)
     if not valido:
         return False
 
-    # Normalização
-    (
-        nome, cep, endereco, numero, complemento, bairro, cidade, estado, motivo
-    ) = normalizar_dados(
+    (nome, cep, endereco, numero, complemento, bairro, cidade, estado, motivo) = normalizar_dados(
         nome, cep, endereco, numero, complemento, bairro, cidade, estado, motivo
     )
 
-    # Criação do registro
     linha = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "nome": nome,
@@ -281,9 +193,9 @@ def cadastrar_paciente(
         "motivo": motivo
     }
 
-    # Salvamento
     salvar_dados_paciente(linha)
     return True
+
 
 # INICIALIZAÇÃO
 inicializar_arquivo()
@@ -294,22 +206,15 @@ st.markdown("Sistema para cadastro e controle de pacientes.")
 
 # FORMULÁRIO
 with st.form("cadastro_paciente", clear_on_submit=False):
-
-    # DADOS DO PACIENTE
     st.markdown("### Dados do paciente")
     nome = st.text_input("Nome do paciente", placeholder="Digite o nome completo", key="nome")
 
     col1, col2 = st.columns(2)
     with col1:
-        idade = st.number_input(
-            "Idade", min_value=0, max_value=120, step=1, value=None, placeholder="Digite a idade", key="idade"
-        )
+        idade = st.number_input("Idade", min_value=0, max_value=120, step=1, value=None, placeholder="Digite a idade", key="idade")
     with col2:
-        sexo = st.selectbox(
-            "Sexo", options=["M", "F", "N.I"], index=None, placeholder="Selecione", key="sexo"
-        )
+        sexo = st.selectbox("Sexo", options=["M", "F", "N.I"], index=None, placeholder="Selecione", key="sexo")
 
-    # ENDEREÇO
     st.markdown("### Endereço")
     cep = st.text_input("CEP", placeholder="00000-000", max_chars=9, key="cep")
 
@@ -329,37 +234,29 @@ with st.form("cadastro_paciente", clear_on_submit=False):
     with col3:
         estado = st.selectbox("Estado", options=ESTADOS, index=None, placeholder="Selecione", key="estado")
 
-    # INFORMAÇÕES DO ATENDIMENTO
     st.markdown("### Informações do atendimento")
-    convenio = st.selectbox(
-        "Convênio", options=CONVENIOS, index=None, placeholder="Selecione o convênio", key="convenio"
-    )
-    prioridade = st.slider(
-        "Prioridade do atendimento (5 = Urgente)", min_value=1, max_value=5, value=1, step=1, key="prioridade"
-    )
-    motivo = st.text_area(
-        "Motivo da consulta / observações", placeholder="Digite o motivo da consulta ou outras observações", height=100, key="motivo"
-    )
+    convenio = st.selectbox("Convênio", options=CONVENIOS, index=None, placeholder="Selecione o convênio", key="convenio")
+    prioridade = st.slider("Prioridade do atendimento (5 = Urgente)", min_value=1, max_value=5, value=1, step=1, key="prioridade")
+    motivo = st.text_area("Motivo da consulta / observações", placeholder="Digite o motivo da consulta ou outras observações", height=100, key="motivo")
 
-    # BOTÕES
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
         enviado = st.form_submit_button("Cadastrar paciente", type="primary", use_container_width=True)
     with col_btn2:
         limpar = st.form_submit_button("Limpar Formulário", use_container_width=True)
 
-# PROCESSAMENTO DOS BOTÕES
+# PROCESSAMENTO DOS BOTÕES DE CADASTRO E LIMPEZA
 if limpar:
     limpar_formulario()
     st.rerun()
 
 if enviado:
-    sucesso = cadastrar_paciente(
-        nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo
-    )
+    sucesso = cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo)
     if sucesso:
         st.success("✅ Paciente cadastrado com sucesso!")
         st.rerun()
+
+st.divider()
 
 # ÚLTIMOS PACIENTES
 st.markdown("### Últimos pacientes cadastrados")
@@ -370,15 +267,53 @@ if df_ultimos.empty:
 else:
     st.dataframe(df_ultimos, use_container_width=True, hide_index=True)
 
-# DOWNLOAD
+
+# GESTÃO DOS DADOS: EXCLUIR E EXPORTAR
 df_completo = carregar_pacientes()
 if not df_completo.empty:
-    st.markdown("### Exportar Dados")
-    csv = df_completo.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        label="Baixar dados cadastrados (CSV)",
-        data=csv,
-        file_name="pacientes.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
+    st.divider()
+    st.markdown("### Gestão de Registros")
+    
+    col_export, col_delete = st.columns(2)
+    
+    # Coluna 1: Download
+    with col_export:
+        csv = df_completo.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label="Baixar dados cadastrados (CSV)",
+            data=csv,
+            file_name="pacientes.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    # Coluna 2: Exclusão (Expander)
+    with col_delete:
+        with st.expander("Excluir um paciente"):
+            # Cria um dicionário vinculando uma string amigável (Nome + Data) ao timestamp real da linha
+            opcoes_exclusao = {}
+            for idx, row in df_completo.iterrows():
+                try:
+                    data_formatada = datetime.fromisoformat(row['timestamp']).strftime("%d/%m/%Y %H:%M:%S")
+                except:
+                    data_formatada = row['timestamp']
+                    
+                texto_exibicao = f"{row['nome']} - {data_formatada}"
+                opcoes_exclusao[texto_exibicao] = row['timestamp']
+            
+            selecao_exclusao = st.selectbox(
+                "Selecione o paciente", 
+                options=list(opcoes_exclusao.keys()), 
+                index=None, 
+                placeholder="Escolha para excluir..."
+            )
+            
+            if st.button("🗑️ Confirmar Exclusão", type="primary", use_container_width=True):
+                if selecao_exclusao:
+                    # Usa o dicionário para pegar o timestamp correto
+                    timestamp_alvo = opcoes_exclusao[selecao_exclusao]
+                    if excluir_paciente(timestamp_alvo):
+                        st.success("Registro excluído com sucesso!")
+                        st.rerun()
+                else:
+                    st.warning("Selecione um paciente para excluir.")

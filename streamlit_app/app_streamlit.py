@@ -3,10 +3,7 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# ============================================================
 # CONFIGURAÇÕES
-# ============================================================
-
 ARQUIVO_CSV = "pacientes.csv"
 
 COLUNAS = [
@@ -49,19 +46,15 @@ CONVENIOS = [
 ]
 
 
-# ============================================================
-# CONFIGURAÇÃO DO STREAMLIT
-# ============================================================
+# CONFIG. STREAMLIT
 
 st.set_page_config(
     page_title="Cadastro de Pacientes",
-    page_icon="🏥",
+    page_icon="",
     layout="centered"
 )
 
-# ============================================================
 # INICIALIZAÇÃO DO ARQUIVO
-# ============================================================
 def inicializar_arquivo():
     #Cria o arquivo CSV caso ele ainda não exista.
     if not os.path.exists(ARQUIVO_CSV):
@@ -74,10 +67,7 @@ def inicializar_arquivo():
             encoding="utf-8-sig"
         )
 
-# ============================================================
 # LEITURA DOS DADOS
-# ============================================================
-
 def carregar_pacientes():
     #Carrega os pacientes armazenados no CSV.
 
@@ -96,11 +86,7 @@ def carregar_pacientes():
     except Exception:
         return pd.DataFrame(columns=COLUNAS)
 
-
-# ============================================================
 # NORMALIZAÇÃO DOS DADOS
-# ============================================================
-
 def normalizar_dados(
     nome,
     cep,
@@ -141,11 +127,7 @@ def normalizar_dados(
         motivo
     )
 
-
-# ============================================================
 # VALIDAÇÃO
-# ============================================================
-
 def validar_paciente(
     nome,
     idade,
@@ -305,7 +287,6 @@ def limpar_formulario():
 
 
 # CADASTRAR PACIENTE
-
 def cadastrar_paciente(
     nome,
     idade,
@@ -398,7 +379,7 @@ inicializar_arquivo()
 
 
 # INTERFACE
-st.title("🏥 Cadastro de Pacientes")
+st.title("Cadastro de Pacientes")
 
 st.markdown(
     "Sistema para cadastro e controle de pacientes."
@@ -414,7 +395,7 @@ with st.form(
 
     # DADOS DO PACIENTE
     
-    st.markdown("### 👤 Dados do paciente")
+    st.markdown("### Dados do paciente")
 
     nome = st.text_input(
         "Nome do paciente",
@@ -448,7 +429,7 @@ with st.form(
 
     # ENDEREÇO
 
-    st.markdown("### 📍 Endereço")
+    st.markdown("### Endereço")
     cep = st.text_input(
         "CEP",
         placeholder="00000-000",
@@ -508,7 +489,7 @@ with st.form(
     # INFORMAÇÕES DO ATENDIMENTO
 
     st.markdown(
-        "### 🏥 Informações do atendimento"
+        "### Informações do atendimento"
     )
 
     convenio = st.selectbox(
@@ -574,7 +555,7 @@ if enviado:
 
 # ÚLTIMOS PACIENTES
 
-st.markdown("### 📋 Últimos pacientes cadastrados")
+st.markdown("### Últimos pacientes cadastrados")
 
 df_ultimos = buscar_ultimos_pacientes()
 
@@ -599,14 +580,14 @@ df_completo = carregar_pacientes()
 
 if not df_completo.empty:
 
-    st.markdown("### 📥 Exportação")
+    st.markdown("### Exportar Dados")
 
     csv = df_completo.to_csv(
         index=False
     ).encode("utf-8-sig")
 
     st.download_button(
-        label="📥 Baixar dados dos pacientes (CSV)",
+        label="Baixar dados cadastrados (CSV)",
         data=csv,
         file_name="pacientes.csv",
         mime="text/csv",

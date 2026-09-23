@@ -232,7 +232,7 @@ def validar_paciente(
         return False
 
     # Convênio
-     if not convenio:
+    if not convenio:
 
         st.error("Selecione o convênio.")
         return False

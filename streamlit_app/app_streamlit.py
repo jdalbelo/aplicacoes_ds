@@ -184,7 +184,7 @@ def validar_paciente(
         return False
 
     # Sexo
-     if not sexo:
+    if not sexo:
         st.error("Selecione o sexo do paciente.")
         return False
 

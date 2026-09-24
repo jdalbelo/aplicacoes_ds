@@ -142,7 +142,7 @@ def salvar_dados_paciente(linha):
     novo = pd.DataFrame([linha], columns=COLUNAS)
     novo.to_csv(ARQUIVO_CSV, mode="a", header=False, index=False, encoding="utf-8-sig")
 
-# EXCLUIR PACIENTE 
+# EXCLUIR PACIENTE
 def excluir_paciente(timestamp):
     df = carregar_pacientes()
     if not df.empty:
@@ -158,9 +158,13 @@ def buscar_ultimos_pacientes():
         return pd.DataFrame(columns=COLUNAS)
     return df.tail(5)
 
-# LIMPAR FORMULÁRIO (CORRIGIDO)
+# LIMPAR FORMULÁRIO
 def limpar_formulario():
-    # Em vez de deletar, definimos os valores explícitos de vazio/padrão
+    # Definimos os valores explícitos de vazio/padrão.
+    # IMPORTANTE: isso só pode ser chamado ANTES de os widgets com essas
+    # keys serem instanciados no script (ou dentro de um callback on_click/
+    # on_submit, que roda antes do rerender). Nunca chame isso depois que
+    # os widgets já foram desenhados na mesma execução do script.
     st.session_state["nome"] = ""
     st.session_state["idade"] = None
     st.session_state["sexo"] = None
@@ -209,6 +213,14 @@ def cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, ba
 # INICIALIZAÇÃO
 inicializar_arquivo()
 
+# LIMPEZA PENDENTE (deve rodar ANTES de qualquer widget do formulário ser criado)
+# Isso evita o StreamlitWidgetAlreadyInstantiatedError: em vez de limpar o
+# session_state depois que os widgets já foram desenhados, marcamos uma
+# flag e limpamos no início do próximo rerun, antes de o formulário existir.
+if st.session_state.get("_limpar_apos_sucesso", False):
+    limpar_formulario()
+    st.session_state["_limpar_apos_sucesso"] = False
+
 # INTERFACE
 st.title("Cadastro de Pacientes")
 st.markdown("Sistema para cadastro e controle de pacientes.")
@@ -252,7 +264,8 @@ with st.form("cadastro_paciente", clear_on_submit=False):
     with col_btn1:
         enviado = st.form_submit_button("Cadastrar paciente", type="primary", use_container_width=True)
     with col_btn2:
-        # Usamos o 'on_click' para que o botão acione a função de limpar diretamente
+        # on_click roda ANTES do rerender, então chamar limpar_formulario()
+        # aqui é seguro.
         st.form_submit_button("Limpar Formulário", use_container_width=True, on_click=limpar_formulario)
 
 # PROCESSAMENTO DO CADASTRO
@@ -260,7 +273,12 @@ if enviado:
     sucesso = cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo)
     if sucesso:
         st.success("Paciente cadastrado com sucesso!")
-        limpar_formulario() # Limpa os dados caso o cadastro dê certo
+        # Não chamamos limpar_formulario() diretamente aqui, pois os widgets
+        # do formulário já foram instanciados nesta execução do script.
+        # Em vez disso, marcamos uma flag e disparamos um rerun: na próxima
+        # execução, a flag é verificada e o formulário é limpo ANTES de os
+        # widgets serem criados novamente.
+        st.session_state["_limpar_apos_sucesso"] = True
         st.rerun()
 
 st.divider()
@@ -280,9 +298,9 @@ df_completo = carregar_pacientes()
 if not df_completo.empty:
     st.divider()
     st.markdown("### Gestão de Registros")
-    
+
     col_export, col_delete = st.columns(2)
-    
+
     # Coluna 1: Download
     with col_export:
         csv = df_completo.to_csv(index=False).encode("utf-8-sig")
@@ -303,17 +321,17 @@ if not df_completo.empty:
                     data_formatada = datetime.fromisoformat(row['timestamp']).strftime("%d/%m/%Y %H:%M:%S")
                 except:
                     data_formatada = row['timestamp']
-                    
+
                 texto_exibicao = f"{row['nome']} - {data_formatada}"
                 opcoes_exclusao[texto_exibicao] = row['timestamp']
-            
+
             selecao_exclusao = st.selectbox(
-                "Selecione o paciente", 
-                options=list(opcoes_exclusao.keys()), 
-                index=None, 
+                "Selecione o paciente",
+                options=list(opcoes_exclusao.keys()),
+                index=None,
                 placeholder="Escolha para excluir..."
             )
-            
+
             if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
                 if selecao_exclusao:
                     timestamp_alvo = opcoes_exclusao[selecao_exclusao]

@@ -142,11 +142,10 @@ def salvar_dados_paciente(linha):
     novo = pd.DataFrame([linha], columns=COLUNAS)
     novo.to_csv(ARQUIVO_CSV, mode="a", header=False, index=False, encoding="utf-8-sig")
 
-# EXCLUIR PACIENTE (NOVA FUNÇÃO)
+# EXCLUIR PACIENTE 
 def excluir_paciente(timestamp):
     df = carregar_pacientes()
     if not df.empty:
-        # Mantém apenas os registros cujo timestamp seja diferente do escolhido para exclusão
         df_filtrado = df[df["timestamp"] != timestamp]
         df_filtrado.to_csv(ARQUIVO_CSV, index=False, encoding="utf-8-sig")
         return True
@@ -159,12 +158,22 @@ def buscar_ultimos_pacientes():
         return pd.DataFrame(columns=COLUNAS)
     return df.tail(5)
 
-# LIMPAR FORMULÁRIO
+# LIMPAR FORMULÁRIO (CORRIGIDO)
 def limpar_formulario():
-    campos = ["nome", "idade", "sexo", "cep", "endereco", "numero", "complemento", "bairro", "cidade", "estado", "convenio", "prioridade", "motivo"]
-    for campo in campos:
-        if campo in st.session_state:
-            del st.session_state[campo]
+    # Em vez de deletar, definimos os valores explícitos de vazio/padrão
+    st.session_state["nome"] = ""
+    st.session_state["idade"] = None
+    st.session_state["sexo"] = None
+    st.session_state["cep"] = ""
+    st.session_state["endereco"] = ""
+    st.session_state["numero"] = ""
+    st.session_state["complemento"] = ""
+    st.session_state["bairro"] = ""
+    st.session_state["cidade"] = ""
+    st.session_state["estado"] = None
+    st.session_state["convenio"] = None
+    st.session_state["prioridade"] = 1
+    st.session_state["motivo"] = ""
 
 # CADASTRAR PACIENTE
 def cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo):
@@ -243,17 +252,15 @@ with st.form("cadastro_paciente", clear_on_submit=False):
     with col_btn1:
         enviado = st.form_submit_button("Cadastrar paciente", type="primary", use_container_width=True)
     with col_btn2:
-        limpar = st.form_submit_button("Limpar Formulário", use_container_width=True)
+        # Usamos o 'on_click' para que o botão acione a função de limpar diretamente
+        st.form_submit_button("Limpar Formulário", use_container_width=True, on_click=limpar_formulario)
 
-# PROCESSAMENTO DOS BOTÕES DE CADASTRO E LIMPEZA
-if limpar:
-    limpar_formulario()
-    st.rerun()
-
+# PROCESSAMENTO DO CADASTRO
 if enviado:
     sucesso = cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo)
     if sucesso:
         st.success("✅ Paciente cadastrado com sucesso!")
+        limpar_formulario() # Limpa os dados caso o cadastro dê certo
         st.rerun()
 
 st.divider()
@@ -290,7 +297,6 @@ if not df_completo.empty:
     # Coluna 2: Exclusão (Expander)
     with col_delete:
         with st.expander("Excluir um paciente"):
-            # Cria um dicionário vinculando uma string amigável (Nome + Data) ao timestamp real da linha
             opcoes_exclusao = {}
             for idx, row in df_completo.iterrows():
                 try:
@@ -310,7 +316,6 @@ if not df_completo.empty:
             
             if st.button("🗑️ Confirmar Exclusão", type="primary", use_container_width=True):
                 if selecao_exclusao:
-                    # Usa o dicionário para pegar o timestamp correto
                     timestamp_alvo = opcoes_exclusao[selecao_exclusao]
                     if excluir_paciente(timestamp_alvo):
                         st.success("Registro excluído com sucesso!")

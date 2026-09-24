@@ -259,7 +259,7 @@ with st.form("cadastro_paciente", clear_on_submit=False):
 if enviado:
     sucesso = cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo)
     if sucesso:
-        st.success("✅ Paciente cadastrado com sucesso!")
+        st.success("Paciente cadastrado com sucesso!")
         limpar_formulario() # Limpa os dados caso o cadastro dê certo
         st.rerun()
 
@@ -314,7 +314,7 @@ if not df_completo.empty:
                 placeholder="Escolha para excluir..."
             )
             
-            if st.button("🗑️ Confirmar Exclusão", type="primary", use_container_width=True):
+            if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
                 if selecao_exclusao:
                     timestamp_alvo = opcoes_exclusao[selecao_exclusao]
                     if excluir_paciente(timestamp_alvo):

@@ -268,7 +268,7 @@ with st.form("cadastro_paciente", clear_on_submit=False):
         # aqui é seguro.
         st.form_submit_button("Limpar Formulário", use_container_width=True, on_click=limpar_formulario)
 
-# PROCESSAMENTO DO CADASTRO
+# PROCESSAMENTO DO CADASTRO 
 if enviado:
     sucesso = cadastrar_paciente(nome, idade, sexo, cep, endereco, numero, complemento, bairro, cidade, estado, convenio, prioridade, motivo)
     if sucesso:

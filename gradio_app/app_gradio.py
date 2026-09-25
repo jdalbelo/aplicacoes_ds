@@ -174,7 +174,7 @@ inicializar_arquivo()
 
 
 # INTERFACE GRADIO
-with gr.Blocks(theme=gr.themes.Ocean()) as cadastro:
+with gr.Blocks(theme=gr.themes.Soft()) as cad:
 
     gr.Markdown("# Cadastro de Pacientes\nSistema para cadastro e controle de pacientes.")
 
@@ -261,4 +261,4 @@ with gr.Blocks(theme=gr.themes.Ocean()) as cadastro:
     )
 
 if __name__ == "__main__":
-    cadastro.launch()
+    cad.launch()

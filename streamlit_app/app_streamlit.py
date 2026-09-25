@@ -48,7 +48,7 @@ CONVENIOS = [
 # CONFIG. STREAMLIT
 st.set_page_config(
     page_title="Cadastro de Pacientes",
-    page_icon="🏥",
+    page_icon="",
     layout="centered"
 )
 
